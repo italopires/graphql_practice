@@ -3,8 +3,38 @@ import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import gql from 'graphql-tag';
 
+const users = [{
+  id: 1,
+  name: 'João Silva',
+  email: 'jsilva@gmail.com',
+  idade: 29
+}, {
+  id: 2,
+  name: 'Rafael Júnior',
+  email: 'rafaelj@gmail.com',
+  idade: 31
+}, {
+  id: 3,
+  name: 'Daniel Smith',
+  email: 'danism@gmail.com',
+  idade: 24
+}]
+
+const profiles = [{
+  id: 1,
+  name: 'Common'
+}, {
+  id: 2,
+  name: 'Administrator'
+}]
+
 const typeDefs = gql`
   scalar Date
+
+  type Profile {
+    id: ID
+    name: String
+  }
 
   type User {
     id: ID!
@@ -27,6 +57,11 @@ const typeDefs = gql`
     currentTime: Date!
     signedInUser: User
     productInHighlight: Product
+    megaSenaNumbers: [Int!]!
+    users: [User]
+    user(id: ID): User
+    profiles: [Profile]
+    profile(id: ID): Profile
   }
 
 `;
@@ -52,7 +87,6 @@ const resolvers = {
       return new Date()
     },
     signedInUser(obj) {
-      console.log(obj);
       return {
         id: 1,
         name: 'Ana',
@@ -65,11 +99,31 @@ const resolvers = {
     productInHighlight() {
       return {
         name: 'Product 1',
-        price: 33.8,
+        price: 30,
         discount: 0.5,
       }
     },
-  }
+    megaSenaNumbers() {
+      const ascending = (a, b) => a - b;
+      return Array(6).fill(0).map(n => parseInt(Math.random() * 60 + 1)).sort(ascending);
+    },
+    users() {
+      return users;
+    },
+    user(_, args) {
+      const selecteds = users.filter(u => u.id === parseInt(args.id))
+
+      return selecteds ? selecteds[0] : null;
+    },
+    profiles() {
+      return profiles;
+    },
+    profile(_, { id }) {
+      const profile = profiles.filter(p => p.id === parseInt(id));
+
+      return profile ? profile[0] : null;
+    }
+  },
 };
 
 const server = new ApolloServer({
